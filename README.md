@@ -4,6 +4,8 @@ Real-time disk I/O monitor for Linux with terminal charts.
 
 Reads `/proc/diskstats` and per-process I/O from `/proc/<pid>/io` to display live throughput, IOPS, and latency sparklines using [ratatui](https://github.com/ratatui/ratatui).
 
+![dio screenshot](screenshot.png)
+
 ## Features
 
 - Per-device sparkline charts (throughput, IOPS, latency)
