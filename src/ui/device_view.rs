@@ -145,35 +145,47 @@ fn render_chart(frame: &mut Frame, area: Rect, spec: &ChartSpec) {
     let current_write = spec.write_buf.latest().unwrap_or(0.0);
     let fmt = spec.format_value;
 
-    let datasets = vec![
-        line_chart::Dataset {
-            data: &read_data,
-            color: theme::READ_COLOR,
-            name: format!("read: {}", fmt(current_read)),
-        },
-        line_chart::Dataset {
-            data: &write_data,
-            color: theme::WRITE_COLOR,
-            name: format!("write: {}", fmt(current_write)),
-        },
-    ];
+    let x_labels = [format!("-{:.0}s", total_secs), "now".to_string()];
+    let y_labels = ["0".to_string(), fmt(y_max)];
 
-    let chart = LineChart::new(datasets)
-        .block(
-            Block::default()
-                .title(format!(" {} ", spec.title))
-                .borders(Borders::ALL)
-                .style(theme::border_style()),
-        )
-        .x_bounds([0.0, x_max])
-        .y_bounds([0.0, y_max])
-        .x_labels([
-            format!("-{:.0}s", total_secs),
-            "now".to_string(),
-        ])
-        .y_labels(["0".to_string(), fmt(y_max)]);
+    let [read_area, write_area] =
+        Layout::vertical([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .areas(area);
 
-    frame.render_widget(chart, area);
+    let read_chart = LineChart::new(vec![line_chart::Dataset {
+        data: &read_data,
+        color: theme::READ_COLOR,
+        name: format!("read: {}", fmt(current_read)),
+    }])
+    .block(
+        Block::default()
+            .title(format!(" {} — read ", spec.title))
+            .borders(Borders::ALL)
+            .style(theme::border_style()),
+    )
+    .x_bounds([0.0, x_max])
+    .y_bounds([0.0, y_max])
+    .x_labels(x_labels.clone())
+    .y_labels(y_labels.clone());
+
+    let write_chart = LineChart::new(vec![line_chart::Dataset {
+        data: &write_data,
+        color: theme::WRITE_COLOR,
+        name: format!("write: {}", fmt(current_write)),
+    }])
+    .block(
+        Block::default()
+            .title(format!(" {} — write ", spec.title))
+            .borders(Borders::ALL)
+            .style(theme::border_style()),
+    )
+    .x_bounds([0.0, x_max])
+    .y_bounds([0.0, y_max])
+    .x_labels(x_labels)
+    .y_labels(y_labels);
+
+    frame.render_widget(read_chart, read_area);
+    frame.render_widget(write_chart, write_area);
 }
 
 fn render_gauges(frame: &mut Frame, area: Rect, device: &DeviceSeries) {
