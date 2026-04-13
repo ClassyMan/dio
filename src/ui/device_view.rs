@@ -1,22 +1,20 @@
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Modifier, Style};
-use ratatui::symbols::Marker;
-use ratatui::text::Span;
-use ratatui::widgets::{Axis, Block, Borders, Chart, Dataset, Gauge, GraphType};
+use ratatui::widgets::{Block, Borders, Gauge};
 
 use crate::app::App;
 use crate::model::device::DeviceSeries;
 use crate::model::ring_buffer::RingBuffer;
 use crate::model::types::nice_ceil;
 use crate::ui::theme;
+use crate::ui::line_chart::{self, LineChart};
 
 /// Everything needed to render a read/write time-series chart.
 struct ChartSpec<'a> {
     title: &'a str,
     read_buf: &'a RingBuffer,
     write_buf: &'a RingBuffer,
-    y_unit: &'a str,
     format_value: fn(f64) -> String,
     refresh_ms: f64,
 }
@@ -72,7 +70,6 @@ fn render_device_compact(
             title: &device.name,
             read_buf: &device.read_iops,
             write_buf: &device.write_iops,
-            y_unit: "ops/s",
             format_value: crate::model::types::human_iops,
             refresh_ms,
         },
@@ -100,7 +97,6 @@ fn render_device_full(
             title: &format!("{} — IOPS (operations per second)", device.name),
             read_buf: &device.read_iops,
             write_buf: &device.write_iops,
-            y_unit: "ops/s",
             format_value: crate::model::types::human_iops,
             refresh_ms,
         },
@@ -112,7 +108,6 @@ fn render_device_full(
             title: "Throughput (data transferred per second)",
             read_buf: &device.read_throughput,
             write_buf: &device.write_throughput,
-            y_unit: "B/s",
             format_value: crate::model::types::human_bytes,
             refresh_ms,
         },
@@ -129,7 +124,6 @@ fn render_device_full(
             title: "Latency (avg time per operation)",
             read_buf: &device.read_latency,
             write_buf: &device.write_latency,
-            y_unit: "ms",
             format_value: crate::model::types::human_latency,
             refresh_ms,
         },
@@ -152,48 +146,32 @@ fn render_chart(frame: &mut Frame, area: Rect, spec: &ChartSpec) {
     let fmt = spec.format_value;
 
     let datasets = vec![
-        Dataset::default()
-            .name(format!("read: {}", fmt(current_read)))
-            .marker(Marker::Braille)
-            .graph_type(GraphType::Line)
-            .style(theme::read_style())
-            .data(&read_data),
-        Dataset::default()
-            .name(format!("write: {}", fmt(current_write)))
-            .marker(Marker::Braille)
-            .graph_type(GraphType::Line)
-            .style(theme::write_style())
-            .data(&write_data),
+        line_chart::Dataset {
+            data: &read_data,
+            color: theme::READ_COLOR,
+            name: format!("read: {}", fmt(current_read)),
+        },
+        line_chart::Dataset {
+            data: &write_data,
+            color: theme::WRITE_COLOR,
+            name: format!("write: {}", fmt(current_write)),
+        },
     ];
 
-    let chart = Chart::new(datasets)
+    let chart = LineChart::new(datasets)
         .block(
             Block::default()
                 .title(format!(" {} ", spec.title))
                 .borders(Borders::ALL)
                 .style(theme::border_style()),
         )
-        .x_axis(
-            Axis::default()
-                .bounds([0.0, x_max])
-                .labels(vec![
-                    Span::raw(format!("-{:.0}s", total_secs)),
-                    Span::raw(format!("-{:.0}s", total_secs / 2.0)),
-                    Span::raw("now".to_string()),
-                ])
-                .style(theme::label_style()),
-        )
-        .y_axis(
-            Axis::default()
-                .title(spec.y_unit)
-                .bounds([0.0, y_max])
-                .labels(vec![
-                    Span::raw("0"),
-                    Span::raw(fmt(y_max / 2.0)),
-                    Span::raw(fmt(y_max)),
-                ])
-                .style(theme::label_style()),
-        );
+        .x_bounds([0.0, x_max])
+        .y_bounds([0.0, y_max])
+        .x_labels([
+            format!("-{:.0}s", total_secs),
+            "now".to_string(),
+        ])
+        .y_labels(["0".to_string(), fmt(y_max)]);
 
     frame.render_widget(chart, area);
 }

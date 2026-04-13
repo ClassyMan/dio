@@ -1,6 +1,7 @@
 mod device_view;
 mod header;
 mod help_overlay;
+pub mod line_chart;
 mod process_view;
 pub mod theme;
 
