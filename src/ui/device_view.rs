@@ -154,13 +154,13 @@ fn render_chart(frame: &mut Frame, area: Rect, spec: &ChartSpec) {
     let datasets = vec![
         Dataset::default()
             .name(format!("read: {}", fmt(current_read)))
-            .marker(Marker::Braille)
+            .marker(Marker::HalfBlock)
             .graph_type(GraphType::Line)
             .style(theme::read_style())
             .data(&read_data),
         Dataset::default()
             .name(format!("write: {}", fmt(current_write)))
-            .marker(Marker::Braille)
+            .marker(Marker::HalfBlock)
             .graph_type(GraphType::Line)
             .style(theme::write_style())
             .data(&write_data),
