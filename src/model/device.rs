@@ -1,6 +1,7 @@
 use std::time::Instant;
 
 use crate::model::ring_buffer::RingBuffer;
+use crate::sticky_max::StickyMax;
 
 /// Raw cumulative counters from a single read of /proc/diskstats for one device.
 pub struct DiskStatSnapshot {
@@ -98,6 +99,8 @@ pub struct DeviceSeries {
     pub write_latency: RingBuffer,
     pub utilization: RingBuffer,
     pub active: bool,
+    pub iops_y: StickyMax,
+    pub latency_y: StickyMax,
 }
 
 impl DeviceSeries {
@@ -114,6 +117,8 @@ impl DeviceSeries {
             write_latency: RingBuffer::new(capacity),
             utilization: RingBuffer::new(capacity),
             active: true,
+            iops_y: StickyMax::new(),
+            latency_y: StickyMax::new(),
         }
     }
 
@@ -130,6 +135,13 @@ impl DeviceSeries {
             self.read_latency.push(rates.read_latency_ms);
             self.write_latency.push(rates.write_latency_ms);
             self.utilization.push(rates.utilization_pct);
+
+            self.iops_y.update(
+                self.read_iops.max().max(self.write_iops.max()),
+            );
+            self.latency_y.update(
+                self.read_latency.max().max(self.write_latency.max()),
+            );
         }
         self.prev_snapshot = Some(snapshot);
         self.active = true;

@@ -65,8 +65,8 @@ fn render_device(frame: &mut Frame, area: Rect, device: &DeviceSeries, refresh_m
         Layout::vertical([Constraint::Percentage(50), Constraint::Percentage(50)])
             .areas(right_area);
 
-    let y_max_iops = nice_ceil(device.read_iops.max().max(device.write_iops.max()));
-    let y_max_lat = nice_ceil(device.read_latency.max().max(device.write_latency.max()));
+    let y_max_iops = nice_ceil(device.iops_y.current());
+    let y_max_lat = nice_ceil(device.latency_y.current());
 
     render_single_chart(frame, read_iops_area, &ChartSpec {
         title: &format!("{} — read IOPS", device.name),

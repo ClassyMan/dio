@@ -2,6 +2,7 @@ mod app;
 mod collector;
 mod input;
 mod model;
+pub mod sticky_max;
 mod ui;
 
 use std::io;
