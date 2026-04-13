@@ -14,8 +14,8 @@ pub enum ViewMode {
     ProcessTable,
 }
 
-const FAST_REFRESH_MS: u64 = 50;
-const FAST_SCROLLBACK_SECS: u64 = 2;
+const FAST_REFRESH_MS: u64 = 25;
+const FAST_SCROLLBACK_SECS: u64 = 3;
 
 pub struct App {
     pub devices: Vec<DeviceSeries>,
