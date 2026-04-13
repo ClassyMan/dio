@@ -35,7 +35,7 @@ pub struct App {
 
 impl App {
     pub fn new(refresh_ms: u64, scrollback_secs: u64, show_all: bool) -> Self {
-        let ring_capacity = (scrollback_secs * 1000 / refresh_ms) as usize;
+        let ring_capacity = min_capacity(refresh_ms, scrollback_secs);
 
         Self {
             devices: Vec::new(),
@@ -124,16 +124,23 @@ impl App {
                 self.fast_mode = !self.fast_mode;
                 if self.fast_mode {
                     self.refresh_rate = Duration::from_millis(FAST_REFRESH_MS);
-                    self.ring_capacity =
-                        (FAST_SCROLLBACK_SECS * 1000 / FAST_REFRESH_MS) as usize;
+                    self.ring_capacity = min_capacity(FAST_REFRESH_MS, FAST_SCROLLBACK_SECS);
                 } else {
                     self.refresh_rate = Duration::from_millis(self.normal_refresh_ms);
                     self.ring_capacity =
-                        (self.normal_scrollback_secs * 1000 / self.normal_refresh_ms) as usize;
+                        min_capacity(self.normal_refresh_ms, self.normal_scrollback_secs);
                 }
                 self.devices.clear();
             }
             AppAction::None => {}
         }
     }
+}
+
+fn min_capacity(refresh_ms: u64, scrollback_secs: u64) -> usize {
+    let time_based = (scrollback_secs * 1000 / refresh_ms) as usize;
+    let term_width = crossterm::terminal::size()
+        .map(|(w, _)| w as usize)
+        .unwrap_or(200);
+    time_based.max(term_width)
 }
