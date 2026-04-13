@@ -11,6 +11,7 @@ pub enum AppAction {
     ReverseSortDirection,
     IncreaseRefresh,
     DecreaseRefresh,
+    ToggleFastMode,
     None,
 }
 
@@ -30,6 +31,7 @@ pub fn map_key(key: KeyEvent) -> AppAction {
         KeyCode::Char('r') => AppAction::ReverseSortDirection,
         KeyCode::Char('+') | KeyCode::Char('=') => AppAction::IncreaseRefresh,
         KeyCode::Char('-') => AppAction::DecreaseRefresh,
+        KeyCode::Char('f') => AppAction::ToggleFastMode,
         _ => AppAction::None,
     }
 }

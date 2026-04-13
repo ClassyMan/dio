@@ -14,6 +14,9 @@ pub enum ViewMode {
     ProcessTable,
 }
 
+const FAST_REFRESH_MS: u64 = 50;
+const FAST_SCROLLBACK_SECS: u64 = 2;
+
 pub struct App {
     pub devices: Vec<DeviceSeries>,
     pub selected_device: usize,
@@ -24,7 +27,10 @@ pub struct App {
     pub show_all: bool,
     pub ring_capacity: usize,
     pub process_table: ProcessIoTable,
+    pub fast_mode: bool,
     process_tracker: ProcessIoTracker,
+    normal_refresh_ms: u64,
+    normal_scrollback_secs: u64,
 }
 
 impl App {
@@ -41,7 +47,10 @@ impl App {
             show_all,
             ring_capacity,
             process_table: ProcessIoTable::new(),
+            fast_mode: false,
             process_tracker: ProcessIoTracker::new(),
+            normal_refresh_ms: refresh_ms,
+            normal_scrollback_secs: scrollback_secs,
         }
     }
 
@@ -110,6 +119,19 @@ impl App {
                 let current_ms = self.refresh_rate.as_millis() as u64;
                 let new_ms = (current_ms * 2).min(5000);
                 self.refresh_rate = Duration::from_millis(new_ms);
+            }
+            AppAction::ToggleFastMode => {
+                self.fast_mode = !self.fast_mode;
+                if self.fast_mode {
+                    self.refresh_rate = Duration::from_millis(FAST_REFRESH_MS);
+                    self.ring_capacity =
+                        (FAST_SCROLLBACK_SECS * 1000 / FAST_REFRESH_MS) as usize;
+                } else {
+                    self.refresh_rate = Duration::from_millis(self.normal_refresh_ms);
+                    self.ring_capacity =
+                        (self.normal_scrollback_secs * 1000 / self.normal_refresh_ms) as usize;
+                }
+                self.devices.clear();
             }
             AppAction::None => {}
         }

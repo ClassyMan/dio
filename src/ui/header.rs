@@ -23,7 +23,8 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         ViewMode::ProcessTable => " [procs]",
     };
 
-    let title = format!(" dio{} | {}ms ", view_label, app.refresh_rate.as_millis());
+    let fast_tag = if app.fast_mode { " FAST" } else { "" };
+    let title = format!(" dio{} | {}ms{} ", view_label, app.refresh_rate.as_millis(), fast_tag);
 
     let tabs = Tabs::new(device_names)
         .select(app.selected_device)

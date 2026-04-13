@@ -16,6 +16,7 @@ const HELP_TEXT: &[(&str, &str)] = &[
     ("r", "Reverse sort direction"),
     ("+ / =", "Faster refresh rate"),
     ("-", "Slower refresh rate"),
+    ("f", "Toggle fast mode (50ms / 2s window)"),
     ("?", "Toggle this help"),
 ];
 
